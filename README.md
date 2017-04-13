@@ -1,5 +1,16 @@
 # babel-plugin-transform-react-createelement-to-jsx [![build status]][travis] [![npm version]][npm]
 
+# BUILD
+PATH=$(npm bin):$PATH npm run build:lib && npm run build:mod;
+
+# TEST
+npm test
+
+# Console
+node
+runner = require('./lib/runner')
+runner.default('/Users/eric/code/web/app/client/main/admin/inventory/KitsPane.coffee')
+
 [build status]: https://travis-ci.org/flying-sheep/babel-plugin-transform-react-createelement-to-jsx.svg?branch=master
 [travis]: https://travis-ci.org/flying-sheep/babel-plugin-transform-react-createelement-to-jsx
 [npm version]: https://img.shields.io/npm/v/babel-plugin-transform-react-createelement-to-jsx.svg
