@@ -278,10 +278,10 @@ const isIterable = function(obj) {
 export default function({types: t}) {
   /** Get a JSXElement from a CallExpression
    * Returns null if this impossible */
-  function getJSXNode(node) {
+  function convertRtagToJSX(node) {
     if (!isRtagNode(node)) return null;
 
-    //nameNode and propsNode may be undefined, getJSX* need to handle that
+    // nameNode: usually either a stringLiteral or an identifer ('div', MyComponent)
     const [nameNode, propsNode, ...contentNodes] = node.arguments;
 
     // Beginning portion copied directly from rtag
@@ -366,7 +366,20 @@ export default function({types: t}) {
       jsxAttrs.unshift(idJSX);
     }
 
-    const children = getJSXChildren(contentNodes);
+    // change string literals and numeric literals.
+    const modifiedContentNodes = contentNodes.map((cnode) => {
+      if (t.isStringLiteral(cnode)) {
+        const value = replaceXHTMLEntities(cnode.value);
+        return t.stringLiteral(value);
+      } else if (t.isNumericLiteral(cnode)) {
+        const value = cnode.value.toString();
+        return t.stringLiteral(value);
+      } else {
+        return cnode;
+      }
+    });
+
+    const children = getJSXChildren(modifiedContentNodes);
 
     // self-closing tag if no children
     const selfClosing = children.length === 0;
@@ -387,6 +400,7 @@ export default function({types: t}) {
     if (!t.isMemberExpression(node)) return null;
     const object   = getJSXName(node.object);
     const property = getJSXName(node.property);
+
     if (object === null || property === null) return null;
     return t.jSXMemberExpression(object, property);
   }
@@ -425,7 +439,7 @@ export default function({types: t}) {
 
   function getJSXChild(node) {
     if (t.isStringLiteral(node)) return t.jSXText(node.value);
-    if (isRtagNode(node)) return getJSXNode(node);
+    if (isRtagNode(node)) return convertRtagToJSX(node);
     if (t.isExpression(node)) return t.jSXExpressionContainer(node);
     return null;
   }
@@ -473,7 +487,7 @@ export default function({types: t}) {
   return {
     visitor: {
       CallExpression(path) {
-        const node = getJSXNode(path.node);
+        const node = convertRtagToJSX(path.node);
         if (node === null) return null;
         path.replaceWith(node)
       }

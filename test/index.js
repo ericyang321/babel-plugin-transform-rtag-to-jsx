@@ -14,6 +14,17 @@ describe('createElement-to-JSX', () => {
     expect('rtag(Foo.Bar.Baz)').to.convertTo('<Foo.Bar.Baz />;');
   });
 
+  it('should convert string literals with escapes', () => {
+    expect('rtag("h1", {}, "&quot;WORD&quot;")' ).to.convertTo('<h1>"WORD"</h1>;');
+    expect('rtag("h1", "&quot;WORD&quot;")' ).to.convertTo('<h1>"WORD"</h1>;');
+    expect('rtag("h1", "&spades;WORD&spades;")' ).to.convertTo('<h1>♠WORD♠</h1>;');
+  });
+
+  it('should convert numeric literals to strings', () => {
+    expect('rtag("h1", {}, 42)' ).to.convertTo('<h1>42</h1>;');
+    expect('rtag("h1", 42)'     ).to.convertTo('<h1>42</h1>;');
+  });
+
   it('should convert id', () => {
     expect('rtag("h1#bar")'     ).to.convertTo('<h1 id="bar" />;');
     expect('rtag("h1#bar#baz")' ).to.convertTo('<h1 id="baz" />;');
@@ -64,16 +75,16 @@ describe('createElement-to-JSX', () => {
     //expect('rtag("h4", rtag(foo), rtag(bar), rtag(baz))').to.convertTo('<h4><h5 active={...props} /></h4>;');
   });
 	
-	//it('should handle props and children', () => {
-		////we extensively tested props and children separately, so only sth. basic
-		//expect('rtag("h1", {hi: there}, "Header")').to.convertTo('<h1 hi={there}>Header</h1>;')
-	//})
-	
-	//it('should ignore intermingled “null”/“undefined” children', () => {
-		//expect('rtag("h1", null, null, "Header", undefined)').to.convertTo('<h1>Header</h1>;')
-	//})
-	
-	//it('should handle children in nested expressions', () => {
-		//expect('rtag("h1", null, foo ? rtag("p") : null)').to.convertTo('<h1>{foo ? <p /> : null}</h1>;')
-	//})
+  it('should handle props and children', () => {
+    //we extensively tested props and children separately, so only sth. basic
+    expect('rtag("h1", {hi: there}, "Header")').to.convertTo('<h1 hi={there}>Header</h1>;');
+  })
+  
+  it('should ignore intermingled “null”/“undefined” children', () => {
+    expect('rtag("h1", null, null, "Header", undefined)').to.convertTo('<h1>Header</h1>;');
+  })
+  
+  it('should handle children in nested expressions', () => {
+    expect('rtag("h1", null, foo ? rtag("p") : null)').to.convertTo('<h1>{foo ? <p /> : null}</h1>;');
+  })
 })
