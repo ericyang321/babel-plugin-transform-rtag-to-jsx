@@ -78,13 +78,15 @@ describe('createElement-to-JSX', () => {
   it('should handle props and children', () => {
     //we extensively tested props and children separately, so only sth. basic
     expect('rtag("h1", {hi: there}, "Header")').to.convertTo('<h1 hi={there}>Header</h1>;');
-  })
+  });
   
   it('should ignore intermingled “null”/“undefined” children', () => {
     expect('rtag("h1", null, null, "Header", undefined)').to.convertTo('<h1>Header</h1>;');
-  })
+  });
   
   it('should handle children in nested expressions', () => {
-    expect('rtag("h1", null, foo ? rtag("p") : null)').to.convertTo('<h1>{foo ? <p /> : null}</h1>;');
-  })
+    expect('rtag("h1", null, foo ? rtag("p") : null)').to.convertTo('<h1><If condition={foo}><p /></If></h1>;');
+    expect('rtag("h1", null, foo ? (bar ? rtag("p") : null) : null)').to.convertTo('<h1><If condition={foo}><If condition={bar}><p /></If></If></h1>;');
+    expect('rtag("h1", null, foo ? rtag("h2") : bar ? rtag("h3") : rtag("h4"))').to.convertTo('<h1><Choose><When condition={foo}><h2 /></When><When condition={bar}><h3 /></When><Otherwise><h4 /></Otherwise></Choose></h1>;');
+  });
 })

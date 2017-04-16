@@ -322,7 +322,6 @@ export default function({types: t}) {
     }
 
     let jsxAttrs = [];
-    let props = {};
 
     // Check if 2nd arg is a props object literal or an identifier that has the word props in it.
     if ((propsNode != undefined) && 
@@ -333,15 +332,12 @@ export default function({types: t}) {
         )) {
 
       // figure how to get props from identifier.
-      props = {};
       jsxAttrs = getJSXAttrs(propsNode);
     } else {
       if (propsNode != undefined) {
         // propsNode is actually another content, so shift over.
         contentNodes.unshift(propsNode);
       }
-
-      props = {};
     }
 
     // add class attributes (note that there might be a className within the props)
@@ -437,18 +433,113 @@ export default function({types: t}) {
                                : t.jSXSpreadAttribute(prop.argument));
   }
 
-  function getJSXChild(node) {
-    if (t.isStringLiteral(node)) return t.jSXText(node.value);
-    if (isRtagNode(node)) return convertRtagToJSX(node);
-    if (t.isExpression(node)) return t.jSXExpressionContainer(node);
-    return null;
-  }
-
   function getJSXChildren(nodes) {
     const children = nodes.filter(node => !isNullLikeNode(node)).map(getJSXChild);
     if (children.some(child => child == null)) return null;
     return children;
   }
+
+  function getJSXChild(node) {
+    if (t.isStringLiteral(node)) return t.jSXText(node.value);
+    if (t.isConditionalExpression(node)) return convertTernaryToJSXControl(node);
+    if (isRtagNode(node)) return convertRtagToJSX(node);
+    if (t.isExpression(node)) return t.jSXExpressionContainer(node);
+    return null;
+  }
+
+  function convertTernaryToJSXControl(node) {
+    if (!t.isConditionalExpression(node)) return null;
+
+    if (isNullLikeNode(node.alternate)) {
+      /*
+       * Simple ternary can convert to simple If jsx expresion
+       *
+       *  CONDITION ? rtag('h1') : null
+       *
+       *  <If condition={CONDITION}>
+       *    rtag('h1')
+       *  </If>
+       */
+      const jsxId = t.jSXIdentifier("If");
+
+      const attrs = [
+        t.jSXAttribute(t.jSXIdentifier("condition"), getJSXAttributeValue(node.test))
+      ];
+
+      const children = [
+        getJSXChild(node.consequent)
+      ];
+
+      const selfClosing = false;
+      const startTag    = t.jSXOpeningElement(jsxId, attrs, selfClosing);
+      const endTag      = t.jSXClosingElement(jsxId);
+
+      return t.jSXElement(startTag, endTag, children, selfClosing);
+    } else {
+      /*
+       * Advanced ternary can convert to Choose jsx expression.
+       * Handles deep ternaries.
+       *
+       *  CONDITION1 ? rtag('h1') : CONDITION2 ? rtag('h2') : rtag('h3')
+       *
+       *  <Choose>
+         *  <When condition={CONDITION1}>
+         *    rtag('h1')
+         *  </When>
+         *  <When condition={CONDITION2}>
+         *    rtag('h2')
+         *  </When>
+         *  <Otherwise>
+         *    rtag('h2')
+         *  </Otherwise>
+       *  </Choose>
+       */
+
+      let whenChildren = [];
+      let currentTernary = node;
+
+      while (t.isConditionalExpression(currentTernary)) {
+        const attrs = [
+          t.jSXAttribute(t.jSXIdentifier("condition"), getJSXAttributeValue(currentTernary.test))
+        ];
+
+        const children = [
+          getJSXChild(currentTernary.consequent)
+        ];
+
+        const whenJSX = t.jSXElement(
+          t.jSXOpeningElement(t.jSXIdentifier("When"), attrs, false),
+          t.jSXClosingElement(t.jSXIdentifier("When")),
+          children,
+          false
+        );
+
+        whenChildren.push(whenJSX);
+
+        // update to alternate which may or may not be a ternary.
+        currentTernary = currentTernary.alternate;
+      }
+
+      // push otherwise child which should be the currentTernary.
+      whenChildren.push(
+        t.jSXElement(
+          t.jSXOpeningElement(t.jSXIdentifier("Otherwise"), [], false),
+          t.jSXClosingElement(t.jSXIdentifier("Otherwise")),
+          [getJSXChild(currentTernary)],
+          false
+        )
+      );
+
+      // choose element
+      return t.jSXElement(
+        t.jSXOpeningElement(t.jSXIdentifier("Choose"), [], false),
+        t.jSXClosingElement(t.jSXIdentifier("Choose")),
+        whenChildren,
+        false
+      );
+    }
+  }
+
 
   function getJSXIdentifier(node) {
     //TODO: JSXNamespacedName
