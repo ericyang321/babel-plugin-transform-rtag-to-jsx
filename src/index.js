@@ -427,10 +427,29 @@ export default function({types: t}) {
     if (!t.isObjectExpression(node) && t.isExpression(node))
       return [t.jSXSpreadAttribute(node)];
 
-    if (!isPlainObjectExpression(node)) return null;
-    return node.properties.map(prop => t.isObjectProperty(prop)
-                               ? t.jSXAttribute(getJSXIdentifier(prop.key), getJSXAttributeValue(prop.value))
-                               : t.jSXSpreadAttribute(prop.argument));
+    return node.properties.map((prop) => {
+      if (t.isObjectProperty(prop)) {
+        return t.jSXAttribute(getJSXIdentifier(prop.key), getJSXAttributeValue(prop.value));
+      } else if (t.isObjectMethod(prop)) {
+        // For ObjectMethods we need to convert to an Arrow function expression.
+        // {
+        //   foo(x) { return x; }
+        // }
+        //
+        // to
+        //
+        // {
+        //   foo: function(x) { return x; }
+        // }
+
+        const isAsync = false;
+        const fn = t.arrowFunctionExpression(prop.params, prop.body, isAsync);
+
+        return t.jSXAttribute(getJSXIdentifier(prop.key), getJSXAttributeValue(fn));
+      } else {
+        return t.jSXSpreadAttribute(prop.argument);
+      }
+    });
   }
 
   function getJSXChildren(nodes) {
@@ -565,15 +584,6 @@ export default function({types: t}) {
   const isNullLikeNode = node =>
     t.isNullLiteral(node) ||
       t.isIdentifier(node, { name: 'undefined' });
-
-  /** Tests if a node is an object expression with noncomputed, nonmethod attrs */
-  const isPlainObjectExpression = node =>
-    t.isObjectExpression(node) &&
-      node.properties.every(m =>
-                            t.isSpreadProperty(m) ||
-                            (t.isObjectProperty(m, {computed: false}) &&
-                             getJSXIdentifier(m.key) !== null &&
-                             getJSXAttributeValue(m.value) !== null));
 
   return {
     visitor: {

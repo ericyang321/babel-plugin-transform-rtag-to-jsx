@@ -18,6 +18,8 @@ export default function(sourcePath, dstPath) {
       attrsOnSameLineAsTag: false,
       maxAttrsOnTag: 3,
       JSXExpressionsSingleLine: false,
+      firstAttributeOnSameLine: true,
+      alignWithFirstAttribute: true,
       htmlOptions: {
         brace_style: "collapse",
         break_chained_methods: false,
