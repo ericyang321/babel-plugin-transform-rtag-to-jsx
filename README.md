@@ -7,7 +7,9 @@ Turn `rtag` calls back into [JSX] syntax.  Uses [decaffeinate], [jsx-control-sta
 # BUILD
 
 ```
-PATH=$(npm bin):$PATH npm run build:lib && npm run build:mod;
+npm install
+npm run build:lib
+npm run build:mod
 ```
 
 # TEST
