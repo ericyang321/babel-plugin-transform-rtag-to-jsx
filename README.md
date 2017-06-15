@@ -18,17 +18,10 @@ npm run build:mod
 npm test
 ```
 
-# Console
+# Running
 
 ```
-node
-runner = require('./lib/runner')
-
-// outputs standard out
-runner.default('/path/to/coffee/file.coffee')
-
-// outputs file.
-runner.default('/path/to/coffee/file.coffee', '/path/to/jsx/file.jsx')
+npm run convert -- <src> [dst] --prettier
 ```
 
 [JSX]: https://facebook.github.io/react/docs/jsx-in-depth.html
@@ -36,3 +29,4 @@ runner.default('/path/to/coffee/file.coffee', '/path/to/jsx/file.jsx')
 [jsx-control-statements]: https://github.com/AlexGilleran/jsx-control-statements
 [esformatter]: https://github.com/millermedeiros/esformatter
 [esformatter-jsx]: https://github.com/royriojas/esformatter-jsx
+[prettier]: https://github.com/prettier/prettier

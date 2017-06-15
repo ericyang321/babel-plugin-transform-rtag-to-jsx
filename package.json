@@ -33,7 +33,9 @@
     "mocha": "^2.3.4",
     "decaffeinate": "^2.52.8",
     "esformatter": "^0.10.0",
-    "esformatter-jsx": "^8.0.0"
+    "esformatter-jsx": "^8.0.0",
+    "yargs": "^8.0.2",
+    "prettier": "^1.4.4"
   },
   "dependencies": {
     "babel-plugin-syntax-jsx": "^6.3.13",
@@ -45,6 +47,7 @@
     "build:mod": "BABEL_ENV=buildmodule babel src -d mod",
     "watch": "babel src -d lib -w",
     "prepublish": "npm run build",
+    "convert": "node lib/convert.js",
     "test": "mocha --require babel-core/register test"
   },
   "engines": {

@@ -1,14 +1,15 @@
-import {transform} from 'babel-core';
-import fs from 'fs';
-import {convert} from 'decaffeinate';
+#!/usr/bin/env node
 
-import esformatter from 'esformatter';
+import {transform}    from 'babel-core';
+import {convert}      from 'decaffeinate';
+import esformatter    from 'esformatter';
 import esformatterjsx from 'esformatter-jsx';
+import fs             from 'fs';
+import prettier       from 'prettier';
+import yargs          from 'yargs';
 
-//register plugin manually
-esformatter.register(esformatterjsx);
-
-export default function(sourcePath, dstPath) {
+//convert function
+const convertInternal = function(sourcePath, dstPath, prettierBool=false) {
   const sourceCoffee = fs.readFileSync(sourcePath).toString();
   const sourceJS     = convert(sourceCoffee, {preferConst: true}).code;
   const dstJS        = transform(sourceJS, { babelrc: false, plugins: ['./'] }).code;
@@ -45,7 +46,12 @@ export default function(sourcePath, dstPath) {
     }
   };
 
-  const formattedJs = esformatter.format(dstJS, formatConfig);
+  let formattedJs = esformatter.format(dstJS, formatConfig);
+
+  if (prettierBool) {
+    const prettierOptions = {};
+    formattedJs = prettier.format(formattedJs, prettierOptions);
+  }
 
   if (dstPath) {
     fs.writeFileSync(dstPath, formattedJs);
@@ -53,3 +59,20 @@ export default function(sourcePath, dstPath) {
     console.log(formattedJs);
   }
 }
+
+// parse options
+var options = yargs
+    .usage( "Usage: $0 [--prettier] <src> [dst]" )
+    .required( 1, "src is required" )
+    .option( "p", { alias: "prettier", demand: true, describe: "Use prettier to make code formatting better", type: "boolean" } )
+    .help( "?" )
+    .alias( "?", "help" )
+    .argv;
+
+// pull out needed options
+const srcPath      = options._[0];
+const dstPath      = options._[1];
+const prettierBool = options.prettier || options.p;
+
+// Actually convert.
+convertInternal(srcPath, dstPath, prettierBool);
