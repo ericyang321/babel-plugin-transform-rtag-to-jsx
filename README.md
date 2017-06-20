@@ -21,10 +21,12 @@ npm test
 # Running
 
 ```
-npm run convert -- <src> [dst] --prettier --classify
+npm run convert -- <src> [dst] --prettier --classify --inplace
+npm run convert -- <src> [dst] -p -c -i
 
 prettier makes things prettier
 classify convert to es5 classes, but also uses unsupported es-next properties.
+inplace reuse src file name, but change extension to jsx.
 ```
 
 [JSX]: https://facebook.github.io/react/docs/jsx-in-depth.html

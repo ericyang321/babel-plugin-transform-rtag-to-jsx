@@ -6,6 +6,7 @@ import {convert}      from 'decaffeinate';
 import esformatter    from 'esformatter';
 import esformatterjsx from 'esformatter-jsx';
 import fs             from 'fs';
+import path           from 'path';
 import prettier       from 'prettier';
 import tmp            from 'tmp';
 import yargs          from 'yargs';
@@ -81,15 +82,21 @@ var options = yargs
     .required( 1, "src is required" )
     .option( "p", { alias: "prettier", demand: false, describe: "Use prettier to make code formatting better", type: "boolean" } )
     .option( "c", { alias: "classify", demand: false, describe: "Use react-codemod to convert to es5 classes", type: "boolean" } )
+    .option( "i", { alias: "inplace",  demand: false, describe: "Output file uses input file name, changes extention", type: "boolean" } )
     .help( "?" )
     .alias( "?", "help" )
     .argv;
 
 // pull out needed options
 const srcPath      = options._[0];
-const dstPath      = options._[1];
+let   dstPath      = options._[1];
 const prettierBool = options.prettier || options.p;
 const classifyBool = options.classify || options.c;
+
+if (dstPath == undefined && options.inplace) {
+  const pathObj = path.parse(srcPath);
+  dstPath = pathObj.dir + '/' + pathObj.name + ".jsx";
+}
 
 // Actually convert.
 convertInternal(srcPath, dstPath, prettierBool, classifyBool);
