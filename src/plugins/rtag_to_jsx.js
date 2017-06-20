@@ -261,14 +261,6 @@ const replaceXHTMLEntities = function(str) {
   });
 };
 
-const REAL_ITERATOR_SYMBOL = typeof(Symbol) === 'function' && Symbol.iterator;
-const FAUX_ITERATOR_SYMBOL = '@@iterator';
-const ITERATOR_SYMBOL      = REAL_ITERATOR_SYMBOL || FAUX_ITERATOR_SYMBOL;
-
-const isIterable = function(obj) {
-  return typeof (obj != null ? obj[ITERATOR_SYMBOL] : void 0) === 'function';
-};
-
 /** Visitor factory for babel, converting rtag to JSX
   *
   * rtag('literal')
@@ -590,8 +582,8 @@ export default function({types: t}) {
       CallExpression(path) {
         const node = convertRtagToJSX(path.node);
         if (node === null) return null;
-        path.replaceWith(node)
+        path.replaceWith(node);
       }
     }
-  }
+  };
 }

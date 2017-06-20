@@ -12,7 +12,7 @@ import yargs          from 'yargs';
 const convertInternal = function(sourcePath, dstPath, prettierBool=false) {
   const sourceCoffee = fs.readFileSync(sourcePath).toString();
   const sourceJS     = convert(sourceCoffee, {preferConst: true}).code;
-  const dstJS        = transform(sourceJS, { babelrc: false, plugins: ['./'] }).code;
+  const dstJS        = transform(sourceJS, { babelrc: false, plugins: ['./lib/plugins/rtag_to_jsx.js'] }).code;
 
   const formatConfig = {
     jsx: {

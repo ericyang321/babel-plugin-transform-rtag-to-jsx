@@ -2,7 +2,7 @@ import chai, {expect} from 'chai';
 import convertTo from './chai-convert-to';
 
 chai.use(convertTo(
-	{ plugins: [require.resolve('../'), 'syntax-object-rest-spread'] },
+	{ plugins: ['./lib/plugins/rtag_to_jsx.js', 'syntax-object-rest-spread'] },
 	{ plugins: ['syntax-jsx', 'syntax-object-rest-spread'] })
 );
 

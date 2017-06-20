@@ -13,18 +13,21 @@ import {transform} from 'babel-core'
 //	return ast
 //}
 
-export default function(converterOptions={ plugins: ['../'] }, parserOptions={}) {
+export default function(converterOptions={ plugins: ['./lib/plugins/rtag_to_jsx.js'] }, parserOptions={}) {
 	if (parserOptions.presets)
 		throw new Error(`The parserPlugins should not transform but contain the preset(s) ${parserOptions.presets}`)
 	
 	const transformingPlugins = (parserOptions.plugins || [])
 		.filter(name => name.indexOf('transform-') === 0)
+
 	if (transformingPlugins.length > 0)
 		throw new Error(`The parserOptions should not transform but the plugins contain ${transformingPlugins}`)
 	
 	/** Converts with this plugin, then re-parses */
 	function convert(source) {
-		const {code} = transform(source, { babelrc: false, ...converterOptions })
+    const options = Object.assign({}, { babelrc: false}, converterOptions);
+		const {code} = transform(source, options);
+
 		const {ast} = parseWithJSX(code)
 		return {code, ast}
 	}
