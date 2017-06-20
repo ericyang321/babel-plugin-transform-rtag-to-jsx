@@ -2,7 +2,7 @@
 
 # Overview
 
-Turn `rtag` calls back into [JSX] syntax.  Uses [decaffeinate], [jsx-control-statements], [esformatter], [esformatter-jsx].
+Turn `rtag` calls back into [JSX] syntax.  Uses [decaffeinate], [jsx-control-statements], [esformatter], [esformatter-jsx], [react-codemod].
 
 # BUILD
 
@@ -21,7 +21,10 @@ npm test
 # Running
 
 ```
-npm run convert -- <src> [dst] --prettier
+npm run convert -- <src> [dst] --prettier --classify
+
+prettier makes things prettier
+classify convert to es5 classes, but also uses unsupported es-next properties.
 ```
 
 [JSX]: https://facebook.github.io/react/docs/jsx-in-depth.html
@@ -30,3 +33,4 @@ npm run convert -- <src> [dst] --prettier
 [esformatter]: https://github.com/millermedeiros/esformatter
 [esformatter-jsx]: https://github.com/royriojas/esformatter-jsx
 [prettier]: https://github.com/prettier/prettier
+[react-codemod]: https://github.com/reactjs/react-codemod

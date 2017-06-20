@@ -1,18 +1,33 @@
 #!/usr/bin/env node
 
 import {transform}    from 'babel-core';
+import { execSync }   from 'child_process';
 import {convert}      from 'decaffeinate';
 import esformatter    from 'esformatter';
 import esformatterjsx from 'esformatter-jsx';
 import fs             from 'fs';
 import prettier       from 'prettier';
+import tmp            from 'tmp';
 import yargs          from 'yargs';
 
 //convert function
-const convertInternal = function(sourcePath, dstPath, prettierBool=false) {
+const convertInternal = function(sourcePath, dstPath, prettierBool=false, classifyBool=false) {
   const sourceCoffee = fs.readFileSync(sourcePath).toString();
   const sourceJS     = convert(sourceCoffee, {preferConst: true}).code;
-  const dstJS        = transform(sourceJS, { babelrc: false, plugins: ['./lib/plugins/rtag_to_jsx.js'] }).code;
+  let dstJS          = transform(sourceJS, { babelrc: false, plugins: ['./lib/plugins/rtag_to_jsx.js'] }).code;
+
+  if (classifyBool) {
+    // only runs as cmdline so need to save as temp file.
+    const input = tmp.fileSync({ flags: 'w', mode: 0o666, prefix: 'convert-', postfix: '.js' });
+    fs.writeFileSync(input.fd, dstJS);
+    fs.close(input.fd);
+
+    // modifies input file in-place
+    execSync('./node_modules/jscodeshift/bin/jscodeshift.sh -t ./node_modules/react-codemod/transforms/class.js ' + input.name, (err, stdout, stderr) => {
+    });
+
+    dstJS = fs.readFileSync(input.name).toString();
+  }
 
   const formatConfig = {
     jsx: {
@@ -58,13 +73,14 @@ const convertInternal = function(sourcePath, dstPath, prettierBool=false) {
   } else {
     console.log(formattedJs);
   }
-}
+};
 
 // parse options
 var options = yargs
     .usage( "Usage: $0 [--prettier] <src> [dst]" )
     .required( 1, "src is required" )
-    .option( "p", { alias: "prettier", demand: true, describe: "Use prettier to make code formatting better", type: "boolean" } )
+    .option( "p", { alias: "prettier", demand: false, describe: "Use prettier to make code formatting better", type: "boolean" } )
+    .option( "c", { alias: "classify", demand: false, describe: "Use react-codemod to convert to es5 classes", type: "boolean" } )
     .help( "?" )
     .alias( "?", "help" )
     .argv;
@@ -73,6 +89,7 @@ var options = yargs
 const srcPath      = options._[0];
 const dstPath      = options._[1];
 const prettierBool = options.prettier || options.p;
+const classifyBool = options.classify || options.c;
 
 // Actually convert.
-convertInternal(srcPath, dstPath, prettierBool);
+convertInternal(srcPath, dstPath, prettierBool, classifyBool);
