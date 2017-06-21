@@ -309,6 +309,11 @@ export default function({types: t}) {
       }
 
       jsxName = t.jSXIdentifier(tagName);
+    } else if(t.isTemplateLiteral(nameNode)) {
+      // not implemented converting template literals.
+      // Would have to also change the way we generate the jsx classnames attribute to make a template there as well.
+      classes.push("ERROR_CONVERT_TEMPLATE_LITERAL");
+      jsxName = t.jSXIdentifier("div");
     } else {
       jsxName = getJSXName(nameNode);
     }
