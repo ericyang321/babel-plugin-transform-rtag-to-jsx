@@ -2,7 +2,7 @@
 
 # Overview
 
-Turn `rtag` calls back into [JSX] syntax.  Uses [decaffeinate], [jsx-control-statements], [esformatter], [esformatter-jsx], [react-codemod].
+Turn `rtag` calls back into [JSX] syntax.  Uses [decaffeinate], [jsx-control-statements], [esformatter], [esformatter-jsx], [react-codemod].  Note we use a specific version of react-codemod so that we don't depend on es7 stage1 [class-property-initializers].
 
 # BUILD
 
@@ -36,3 +36,4 @@ inplace reuse src file name, but change extension to jsx.
 [esformatter-jsx]: https://github.com/royriojas/esformatter-jsx
 [prettier]: https://github.com/prettier/prettier
 [react-codemod]: https://github.com/reactjs/react-codemod
+[class-property-initializers]: https://github.com/reactjs/react-codemod/pull/54
