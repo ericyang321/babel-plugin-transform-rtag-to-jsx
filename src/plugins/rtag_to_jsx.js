@@ -254,10 +254,19 @@ const XHTMLEntities = {
   diams: "\u2666"
 };
 
+const hasXHTMLEntities = function(str) {
+  return str.search(/&\w+;/) != -1;
+};
+
 const replaceXHTMLEntities = function(str) {
   return str.replace(/&.*?;/g, function(entity) {
-    var ref;
-    return (ref = XHTMLEntities[entity.slice(1, +(entity.length - 2) + 1 || 9e9)]) != null ? ref : entity;
+    const replacement = XHTMLEntities[entity.slice(1, +(entity.length - 2) + 1 || 9e9)];
+
+    if (replacement != null) {
+      return replacement;
+    } else {
+      entity;
+    }
   });
 };
 
@@ -362,8 +371,22 @@ export default function({types: t}) {
     // change string literals and numeric literals.
     const modifiedContentNodes = contentNodes.map((cnode) => {
       if (t.isStringLiteral(cnode)) {
-        const value = replaceXHTMLEntities(cnode.value);
-        return t.stringLiteral(value);
+        const value         = cnode.value;
+        const modifiedValue = replaceXHTMLEntities(value);
+        const literalNode   = t.stringLiteral(modifiedValue);
+
+        if (hasXHTMLEntities(value)) {
+          // SUPER HACK
+          // the getJSXChildren method will convert this node to its JSX counterpart.
+          // It needs to convert strings with xml entities to <h1>{"♠WORD♠"}</h1>
+          // instead of the usual <h1>WORD</h1>.
+          // 
+          // I am going to hardcode the getJSXChildren method to look for expressionStatement with string literal expressions
+          // to do the correct transformation
+          return t.expressionStatement(literalNode);
+        } else {
+          return literalNode;
+        }
       } else if (t.isNumericLiteral(cnode)) {
         const value = cnode.value.toString();
         return t.stringLiteral(value);
@@ -457,6 +480,12 @@ export default function({types: t}) {
 
   function getJSXChild(node) {
     if (t.isStringLiteral(node)) return t.jSXText(node.value);
+
+    // SUPER HACK from above.
+    if (t.isExpressionStatement(node) && t.isStringLiteral(node.expression)) {
+      return t.jSXExpressionContainer(node.expression);
+    }
+
     if (t.isConditionalExpression(node)) return convertTernaryToJSXControl(node);
     if (isRtagNode(node)) return convertRtagToJSX(node);
     if (t.isExpression(node)) return t.jSXExpressionContainer(node);

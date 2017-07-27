@@ -34,7 +34,11 @@ export default function(converterOptions={ plugins: ['./lib/plugins/rtag_to_jsx.
 	
 	/** Only parses stuff */
 	function parseWithJSX(source) {
-		return transform(source, { babelrc: false, ...parserOptions })
+    // Add opt when available.
+    // https://github.com/babel/babel/pull/5592
+    const generatorOpts = {};
+
+		return transform(source, { babelrc: false, generatorOpts: generatorOpts, ...parserOptions })
 	}
 	
 	return function convertTo(chai, utils) {

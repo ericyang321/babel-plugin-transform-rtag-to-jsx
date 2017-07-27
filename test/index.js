@@ -14,10 +14,17 @@ describe('createElement-to-JSX', () => {
     expect('rtag(Foo.Bar.Baz)').to.convertTo('<Foo.Bar.Baz />;');
   });
 
+  it('should convert string literals', () => {
+    expect('rtag("h1", {}, "WORD")' ).to.convertTo('<h1>WORD</h1>;');
+    expect('rtag("h1", "WORD")' ).to.convertTo('<h1>WORD</h1>;');
+  });
+
+  // Would prefer to have non escaped unicode chars even though it isn't safe
+  // https://github.com/babel/babel/pull/5592
+  // We double escape the \u so that we can compare the generated \u literal.
   it('should convert string literals with escapes', () => {
-    expect('rtag("h1", {}, "&quot;WORD&quot;")' ).to.convertTo('<h1>"WORD"</h1>;');
-    expect('rtag("h1", "&quot;WORD&quot;")' ).to.convertTo('<h1>"WORD"</h1>;');
-    expect('rtag("h1", "&spades;WORD&spades;")' ).to.convertTo('<h1>♠WORD♠</h1>;');
+    expect('rtag("h1", {}, "&spades;WORD&spades;")' ).to.convertTo('<h1>{"\\u2660WORD\\u2660"}</h1>;');
+    expect('rtag("h1", "&spades;WORD&spades;")' ).to.convertTo('<h1>{"\\u2660WORD\\u2660"}</h1>;');
   });
 
   it('should convert numeric literals to strings', () => {
