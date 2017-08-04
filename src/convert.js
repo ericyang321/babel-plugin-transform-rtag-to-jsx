@@ -5,6 +5,7 @@ import { execSync }   from 'child_process';
 import {convert}      from 'decaffeinate';
 import esformatter    from 'esformatter';
 import esformatterjsx from 'esformatter-jsx';
+import eslint         from 'eslint';
 import fs             from 'fs';
 import path           from 'path';
 import prettier       from 'prettier';
@@ -12,7 +13,7 @@ import tmp            from 'tmp';
 import yargs          from 'yargs';
 
 //convert function
-const convertInternal = function(sourcePath, dstPath, prettierBool=false, classifyBool=false) {
+const convertInternal = function(sourcePath, dstPath, prettierBool=false, classifyBool=false, eslintrcPath=undefined) {
   const sourceCoffee = fs.readFileSync(sourcePath).toString();
   const sourceJS     = convert(sourceCoffee, {preferConst: true}).code;
   let dstJS          = transform(sourceJS, { babelrc: false, plugins: ['./lib/plugins/rtag_to_jsx.js'] }).code;
@@ -78,6 +79,20 @@ const convertInternal = function(sourcePath, dstPath, prettierBool=false, classi
     formattedJs = prettier.format(formattedJs, prettierOptions);
   }
 
+  if (eslintrcPath) {
+    const engine = new eslint.CLIEngine({
+      configFile: eslintrcPath,
+      fix: true,
+      useEslintrc: false
+    });
+
+    //const config = engine.getConfigForFile('/Users/eric/code/web/.eslintrc.js')
+    const lintedText = engine.executeOnText(formattedJs);
+
+    // results should always be an array of 1.
+    formattedJs = lintedText.results[0].output;
+  }
+
   if (dstPath) {
     fs.writeFileSync(dstPath, formattedJs);
   } else {
@@ -92,6 +107,7 @@ var options = yargs
     .option( "p", { alias: "prettier", demand: false, describe: "Use prettier to make code formatting better", type: "boolean" } )
     .option( "c", { alias: "classify", demand: false, describe: "Use react-codemod to convert to es5 classes", type: "boolean" } )
     .option( "i", { alias: "inplace",  demand: false, describe: "Output file uses input file name, changes extention", type: "boolean" } )
+    .option( "e", { alias: "eslintrc", demand: false, describe: "Eslintrc file to use for fixes", type: "string" } )
     .help( "?" )
     .alias( "?", "help" )
     .argv;
@@ -101,6 +117,7 @@ const srcPath      = options._[0];
 let   dstPath      = options._[1];
 const prettierBool = options.prettier || options.p;
 const classifyBool = options.classify || options.c;
+const eslintrcPath = options.eslintrc || options.e;
 
 if (dstPath == undefined && options.inplace) {
   const pathObj = path.parse(srcPath);
@@ -108,4 +125,4 @@ if (dstPath == undefined && options.inplace) {
 }
 
 // Actually convert.
-convertInternal(srcPath, dstPath, prettierBool, classifyBool);
+convertInternal(srcPath, dstPath, prettierBool, classifyBool, eslintrcPath);
