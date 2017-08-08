@@ -32,11 +32,9 @@ const convertInternal = function(sourcePath, dstPath, prettierBool=false, classi
   }
 
   //Gross hack to replace \xb5 or \u00b5 unicode literals into unsafe chars.
-  dstJS = dstJS.replace(/\\x[a-fA-F0-9]{2}/, (match) => {
-    return eval("'" + match + "'");
-  });
+  dstJS = dstJS.replace(/\\x[a-fA-F0-9]{2}/g, (match) => { return eval("'" + match + "'"); });
 
-  dstJS = dstJS.replace(/\\u[a-fA-F0-9]{4}/, (match) => {
+  dstJS = dstJS.replace(/\\u[a-fA-F0-9]{4}/g, (match) => {
     return eval("'" + match + "'");
   });
 
