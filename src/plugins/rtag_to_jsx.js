@@ -333,6 +333,7 @@ export default function({types: t}) {
     if ((propsNode != undefined) && 
         (t.isObjectExpression(propsNode) || 
          (t.isIdentifier(propsNode) && propsNode.name.match(/prop/i)) ||
+         (t.isMemberExpression(propsNode) && t.isThisExpression(propsNode.object) && t.isIdentifier(propsNode.property) && propsNode.property.name == 'props') ||
          (t.isCallExpression(propsNode) && t.isIdentifier(propsNode.callee) && propsNode.callee.name.match(/prop/i)) ||
          (t.isCallExpression(propsNode) && t.isMemberExpression(propsNode.callee) && getMemberExpressionFullName(propsNode.callee).match(/_.extend/i))
         )) {
@@ -437,11 +438,17 @@ export default function({types: t}) {
   function getJSXAttrs(node) {
     if (node == null || isNullLikeNode(node)) return [];
 
+    // handle `_.extend`
     if (t.isCallExpression(node) && t.isMemberExpression(node.callee, { name: '_' }) && node.callee.property.name == "extend") {
       const props = node.arguments.map(getJSXAttrs);
       //if calling this recursively works, flatten.
       if (props.every(prop => prop !== null))
         return [].concat.apply([], props);
+    }
+
+    // handle `this.props`
+    if (t.isMemberExpression(node) && t.isThisExpression(node.object) && t.isIdentifier(node.property) && node.property.name == 'props') {
+      return [t.jSXSpreadAttribute(node.property)];
     }
 
     if (!t.isObjectExpression(node) && t.isExpression(node))
